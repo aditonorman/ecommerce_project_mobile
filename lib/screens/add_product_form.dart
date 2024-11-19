@@ -1,7 +1,10 @@
-// lib/screens/add_product_form.dart
-
 import 'package:flutter/material.dart';
 import 'package:ecommerce_project/widgets/left_drawer.dart';
+import 'package:provider/provider.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'dart:convert';
+import 'package:ecommerce_project/screens/menu.dart';
+
 
 class AddProductFormPage extends StatefulWidget {
   const AddProductFormPage({super.key});
@@ -13,11 +16,13 @@ class AddProductFormPage extends StatefulWidget {
 class _AddProductFormPageState extends State<AddProductFormPage> {
   final _formKey = GlobalKey<FormState>();
   String _name = "";
-  int _amount = 0;
+  int _price = 0;
   String _description = "";
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
+
     return Scaffold(
       appBar: AppBar(
         title: const Center(
@@ -32,7 +37,7 @@ class _AddProductFormPageState extends State<AddProductFormPage> {
       drawer: const LeftDrawer(),
       body: Form(
         key: _formKey,
-        child: SingleChildScrollView(
+        child: SingleChildScrollView( 
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -65,13 +70,13 @@ class _AddProductFormPageState extends State<AddProductFormPage> {
                     },
                   ),
                 ),
-                // Product Amount
+                // Product Price
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: TextFormField(
                     decoration: InputDecoration(
-                      hintText: "Amount",
-                      labelText: "Amount",
+                      hintText: "Price",
+                      labelText: "Price",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(5.0),
                       ),
@@ -79,19 +84,19 @@ class _AddProductFormPageState extends State<AddProductFormPage> {
                     keyboardType: TextInputType.number,
                     onChanged: (String? value) {
                       setState(() {
-                        _amount = int.tryParse(value!) ?? 0;
+                        _price = int.tryParse(value!) ?? 0;
                       });
                     },
                     validator: (String? value) {
                       if (value == null || value.isEmpty) {
-                        return "Amount cannot be empty!";
+                        return "Price cannot be empty!";
                       }
-                      int? amount = int.tryParse(value);
-                      if (amount == null) {
-                        return "Amount must be a number!";
+                      int? price = int.tryParse(value);
+                      if (price == null) {
+                        return "Price must be a number!";
                       }
-                      if (amount < 0) {
-                        return "Amount cannot be negative!";
+                      if (price < 0) {
+                        return "Price cannot be negative!";
                       }
                       return null;
                     },
@@ -135,36 +140,39 @@ class _AddProductFormPageState extends State<AddProductFormPage> {
                         backgroundColor: MaterialStateProperty.all(
                             Theme.of(context).colorScheme.primary),
                       ),
-                      onPressed: () {
+                      onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          // Show dialog with entered data
-                          showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title: const Text('Product Successfully Added'),
-                                content: SingleChildScrollView(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text('Name: $_name'),
-                                      Text('Amount: $_amount'),
-                                      Text('Description: $_description'),
-                                    ],
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    child: const Text('OK'),
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                      _formKey.currentState!.reset();
-                                    },
-                                  ),
-                                ],
-                              );
-                            },
+                          // Send request to Django and wait for the response
+                          final response = await request.postJson(
+                            "http://127.0.0.1:8000/create-flutter/",
+                            jsonEncode(<String, dynamic>{
+                              'name': _name,
+                              'price': _price.toString(),
+                              'description': _description,
+                            }),
                           );
+
+                          if (context.mounted) {
+                            if (response['status'] == 'success') {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Product has been added successfully!"),
+                                ),
+                              );
+
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => MyHomePage()),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Failed to add product. Please try again."),
+                                ),
+                              );
+                            }
+                          }
                         }
                       },
                       child: const Text(

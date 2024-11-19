@@ -1,4 +1,4 @@
-# Assignment 1
+# Assignment 7
 
 ---
 
@@ -209,7 +209,7 @@ Use **`const`** for values that are fixed at compile time and **`final`** for va
     color: item.color,
     ```
 ---
-# Assignment 2
+# Assignment 8
 
 
 
@@ -343,4 +343,128 @@ MaterialApp(
 ### Advanced Navigation Techniques
 - **Modularize Screens**: Separate screen files for maintainability.
 - **Use Route Arguments**: Pass data between screens via arguments.
+
+---
+
+# Assignment 9
+
+
+---
+
+## Why Create Models?
+
+Creating a model in Flutter (Dart) allows the app to parse and handle JSON data efficiently. Models provide:
+- **Structured Representation**: Simplifies data handling by creating well-defined classes.
+- **Type Safety**: Reduces the risk of runtime errors caused by untyped data.
+- **Code Maintainability**: Improves readability and scalability of the codebase.
+- **IDE Features**: Enables autocompletion, error checking, and better debugging.
+
+Without models, parsing JSON data results in untyped `Map<String, dynamic>` objects, which are harder to manage and error-prone.
+
+---
+
+## HTTP Library Functionality
+
+The `http` library facilitates communication between the Flutter app and the Django backend. Its key functions include:
+- Performing **HTTP requests** (e.g., `GET`, `POST`).
+- Managing **data transmission** for fetching and submitting JSON data.
+- Ensuring **seamless user authentication** through integration with `pbp_django_auth`.
+
+In this project, it helps the app handle:
+1. User authentication.
+2. CRUD operations on products.
+3. Data exchange with Django.
+
+---
+
+## CookieRequest and Shared Instance
+
+`CookieRequest` is a class provided by the `pbp_django_auth` package. It manages:
+- **Session Cookies**: Maintains user authentication state across the app.
+- **Secure HTTP Requests**: Adds authentication tokens to each request.
+
+By sharing a single `CookieRequest` instance with all app components, it ensures:
+- Unified session management.
+- Consistent access to protected backend endpoints without re-authentication.
+
+---
+
+## Data Transmission Mechanism
+
+1. **Input**: Users enter data into Flutter forms (e.g., login, registration, product details).
+2. **Submission**: Input data is serialized into JSON format.
+3. **Transmission**: JSON data is sent to Django via HTTP POST requests using `CookieRequest`.
+4. **Backend Processing**: Django processes the data (e.g., authenticates users, saves products) and returns a JSON response.
+5. **Reception**: Flutter deserializes the response into Dart models.
+6. **Display**: The app updates the UI based on the received data (e.g., product lists, messages, error alerts).
+
+---
+
+## Authentication Mechanism
+
+### Registration
+1. **Input**: User inputs username and password in the Flutter registration form.
+2. **Transmission**: Flutter sends a POST request to `/auth/register/` in Django.
+3. **Backend**:
+   - Validates data.
+   - Creates a new user.
+   - Returns a success or failure response.
+4. **Response Handling**: Flutter shows a success message or an error and navigates appropriately.
+
+### Login
+1. **Input**: User enters credentials in the Flutter login form.
+2. **Transmission**: Flutter sends a POST request to `/auth/login/`.
+3. **Backend**:
+   - Authenticates the user.
+   - Initiates a session.
+   - Returns a success or failure response.
+4. **Response Handling**:
+   - On success: Updates `CookieRequest`, navigates to the main menu.
+   - On failure: Displays an error dialog.
+
+### Logout
+1. **Action**: User taps the logout button in the Flutter app.
+2. **Transmission**: Flutter sends a POST request to `/auth/logout/`.
+3. **Backend**:
+   - Terminates the session.
+   - Returns a success response.
+4. **Response Handling**:
+   - Clears session state.
+   - Navigates to the login page.
+
+---
+
+## Step-by-Step Implementation
+
+### 1. Set Up Django Authentication
+- Created a new Django app: `authentication`.
+- Installed and configured `django-cors-headers` for CORS handling.
+- Defined Django views for login, register, and logout, handling JSON and user sessions.
+- Configured Django URLs for authentication endpoints.
+
+### 2. Integrate Authentication in Flutter
+- Installed `provider` and `pbp_django_auth` packages for state management and authentication.
+- Configured `main.dart` to share a `CookieRequest` instance across the app using `Provider`.
+- Developed `LoginPage` and `RegisterPage` with forms for user input and response handling.
+
+### 3. Create Custom Model
+- Used [Quicktype](https://app.quicktype.io/) to generate Dart models (`ProductEntry`) based on Django JSON structure.
+- Ensured models accurately represent data for seamless parsing and display.
+
+### 4. Fetch and Display Products
+- Created a Django view to return product data in JSON format, filtered by the logged-in user.
+- Developed `ProductEntryPage` in Flutter:
+  - Fetches product data using `CookieRequest`.
+  - Displays data in a list format.
+- Created `ProductDetailPage` to display detailed information for selected products.
+
+### 5. Filter Products by User
+- Modified Django views to filter products by the authenticated user.
+- Ensured Flutter requests include session cookies for authentication.
+
+### 6. Implement Logout Feature
+- Added logout functionality in both Django and Flutter.
+- Ensured logging out clears session state and redirects users to the login screen.
+
+---
 
